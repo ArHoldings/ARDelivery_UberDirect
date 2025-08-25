@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ar-delivery-uber-direct"
+version = "0.1.0"
+description = "Librería de ARDelivery para usar con UberDirect"
+authors = [
+    { name="Jessica Roman", email="jessica.roman@ar-holdings.com" }
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.28.2"
+]
+
+
+[project.urls]
+Homepage = "https://github.com/usuario/mi-libreria"
