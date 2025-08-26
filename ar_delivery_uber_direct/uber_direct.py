@@ -91,7 +91,7 @@ class UberDirect:
 
     @staticmethod
     @_token_required
-    def get_delivery_quote(data, headers=None):
+    def create_quote(data, headers=None):
         url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/delivery_quotes'
         headers = headers or {}
         headers['Content-Type'] = 'application/json'
@@ -109,9 +109,128 @@ class UberDirect:
         # Lanzar excepción con JSON
         raise JsonException(
             json_data={
-                "error": "Get Delivery Quote Error",
+                "error": "Create Quote Error",
                 "status_code": response.status_code,
                 "details": data
             },
             status_code=response.status_code
+        )
+
+    @staticmethod
+    @_token_required
+    def create_delivery(data, headers=None):
+        url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries'
+        headers = headers or {}
+        headers['Content-Type'] = 'application/json'
+
+        response = requests.post(url, json=data, headers=headers)
+
+        try:
+            data = response.json()
+        except Exception:
+            data = {"error": response.text}
+
+        if response.status_code == 200:
+            return data
+
+        # Lanzar excepción con JSON
+        raise JsonException(
+            json_data={
+                "error": "Create Delivery Error",
+                "status_code": response.status_code,
+                "details": data
+            },
+            status_code=response.status_code
+        )
+
+    @staticmethod
+    @_token_required
+    def list_or_get_delivery(extra_data=None, headers=None):
+        base_url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries"
+
+        delivery_id = getattr(extra_data, "delivery_id", None)
+        query = None
+
+        # Construir URL según delivery_id
+        if delivery_id:
+            url = f"{base_url}/{delivery_id}"
+        else:
+            url = base_url
+            query = extra_data  # se usa como diccionario de filtros
+
+        headers = headers or {}
+        headers["Content-Type"] = "application/json"
+
+        # Hacer request
+        response = requests.get(url, headers=headers, params=query)
+
+        try:
+            data = response.json()
+        except Exception:
+            data = {"error": response.text}
+
+        if response.status_code == 200:
+            return data
+
+        raise JsonException(
+            json_data={
+                "error": "List or Get Delivery Error",
+                "status_code": response.status_code,
+                "details": data,
+            },
+            status_code=response.status_code,
+        )
+
+    @staticmethod
+    @_token_required
+    def update_delivery(delivery_id, data, headers=None):
+        url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries/{delivery_id}"
+
+        headers = headers or {}
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, json=data, headers=headers)
+
+        try:
+            data = response.json()
+        except Exception:
+            data = {"error": response.text}
+
+        if response.status_code == 200:
+            return data
+
+        raise JsonException(
+            json_data={
+                "error": "Update Delivery Error",
+                "status_code": response.status_code,
+                "details": data,
+            },
+            status_code=response.status_code,
+        )
+
+    @staticmethod
+    @_token_required
+    def cancel_delivery(delivery_id, headers=None):
+        url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries/{delivery_id}/cancel"
+
+        headers = headers or {}
+        headers["Content-Type"] = "application/json"
+
+        response = requests.post(url, headers=headers)
+
+        try:
+            data = response.json()
+        except Exception:
+            data = {"error": response.text}
+
+        if response.status_code == 200:
+            return data
+
+        raise JsonException(
+            json_data={
+                "error": "Cancel Delivery Error",
+                "status_code": response.status_code,
+                "details": data,
+            },
+            status_code=response.status_code,
         )
