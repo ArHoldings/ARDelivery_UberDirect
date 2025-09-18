@@ -17,8 +17,7 @@ def _token_required(func):
         cached = cache.get(settings.AR_DELIVERY_UBER_DIRECT_ACCESS_TOKEN, None)
 
         if cached is None or UberDirect._cached_token_expires_soon(json.loads(cached)):
-            new_token_resp = UberDirect._get_new_token()
-            token_json = new_token_resp.json()
+            token_json = UberDirect._get_new_token()
             new_token = token_json['access_token']
             expires_in = token_json.get('expires_in', 1800)
             expires_at = datetime.now() + timedelta(seconds=expires_in)
