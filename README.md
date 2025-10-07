@@ -11,7 +11,7 @@ Este paquete facilita la integración con la API de Uber Direct para gestionar e
 Puedes instalar el paquete directamente desde el repositorio Git:
 
 ```bash
-pip install git+https://github.com/ArHoldings/ARDelivery_UberDirect.git
+pip install git+https://github.com/ArHoldings/ARDelivery_UberDirect.git@0.1.0
 ```
 
 ## Requisitos
