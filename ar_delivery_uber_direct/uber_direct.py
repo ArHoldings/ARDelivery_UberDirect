@@ -100,7 +100,7 @@ class UberDirect:
         if not 'Content-Type' in headers:
             headers['Content-Type'] = 'application/json'
 
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.post(url, data=data, headers=headers)
 
         try:
             data = response.json()
@@ -128,7 +128,7 @@ class UberDirect:
         if not 'Content-Type' in headers:
             headers['Content-Type'] = 'application/json'
 
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.post(url, data=data, headers=headers)
 
         try:
             data = response.json()
@@ -196,7 +196,7 @@ class UberDirect:
         if not 'Content-Type' in headers:
             headers['Content-Type'] = 'application/json'
 
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.post(url, data=data, headers=headers)
 
         try:
             data = response.json()
