@@ -98,7 +98,7 @@ class UberDirect:
         url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/delivery_quotes'
         headers = headers or {}
         if not 'Content-Type' in headers:
-            headers['Content-Type'] = 'application/json'
+            headers['Content-Type'] = 'application/json; charset=utf-8'
 
         response = requests.post(url, data=data, headers=headers)
 
@@ -126,7 +126,7 @@ class UberDirect:
         url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries'
         headers = headers or {}
         if not 'Content-Type' in headers:
-            headers['Content-Type'] = 'application/json'
+            headers['Content-Type'] = 'application/json; charset=utf-8'
 
         response = requests.post(url, data=data, headers=headers)
 
@@ -165,7 +165,7 @@ class UberDirect:
 
         headers = headers or {}
         if not 'Content-Type' in headers:
-            headers['Content-Type'] = 'application/json'
+            headers['Content-Type'] = 'application/json; charset=utf-8'
 
         # Hacer request
         response = requests.get(url, headers=headers, params=query)
@@ -194,7 +194,7 @@ class UberDirect:
 
         headers = headers or {}
         if not 'Content-Type' in headers:
-            headers['Content-Type'] = 'application/json'
+            headers['Content-Type'] = 'application/json; charset=utf-8'
 
         response = requests.post(url, data=data, headers=headers)
 
@@ -222,7 +222,7 @@ class UberDirect:
 
         headers = headers or {}
         if not 'Content-Type' in headers:
-            headers['Content-Type'] = 'application/json'
+            headers['Content-Type'] = 'application/json; charset=utf-8'
 
         response = requests.post(url, headers=headers)
 
