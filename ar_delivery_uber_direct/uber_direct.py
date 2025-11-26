@@ -36,7 +36,11 @@ def _token_required(func):
             cached = cache.get(settings.AR_DELIVERY_UBER_DIRECT_ACCESS_TOKEN)
 
         token = json.loads(cached)['access_token']
-        kwargs['headers'] = {"Authorization": f"Bearer {token}"}
+
+        headers = kwargs.get("headers", {}) or {}
+        headers["Authorization"] = f"Bearer {token}"
+        kwargs["headers"] = headers
+
         return func(*args, **kwargs)
 
     return wrapper
@@ -93,7 +97,8 @@ class UberDirect:
     def create_quote(data, headers=None):
         url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/delivery_quotes'
         headers = headers or {}
-        headers['Content-Type'] = 'application/json'
+        if not 'Content-Type' in headers:
+            headers['Content-Type'] = 'application/json'
 
         response = requests.post(url, json=data, headers=headers)
 
@@ -120,7 +125,8 @@ class UberDirect:
     def create_delivery(data, headers=None):
         url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries'
         headers = headers or {}
-        headers['Content-Type'] = 'application/json'
+        if not 'Content-Type' in headers:
+            headers['Content-Type'] = 'application/json'
 
         response = requests.post(url, json=data, headers=headers)
 
@@ -158,7 +164,8 @@ class UberDirect:
             query = extra_data  # se usa como diccionario de filtros
 
         headers = headers or {}
-        headers["Content-Type"] = "application/json"
+        if not 'Content-Type' in headers:
+            headers['Content-Type'] = 'application/json'
 
         # Hacer request
         response = requests.get(url, headers=headers, params=query)
@@ -186,7 +193,8 @@ class UberDirect:
         url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries/{delivery_id}"
 
         headers = headers or {}
-        headers["Content-Type"] = "application/json"
+        if not 'Content-Type' in headers:
+            headers['Content-Type'] = 'application/json'
 
         response = requests.post(url, json=data, headers=headers)
 
@@ -213,7 +221,8 @@ class UberDirect:
         url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries/{delivery_id}/cancel"
 
         headers = headers or {}
-        headers["Content-Type"] = "application/json"
+        if not 'Content-Type' in headers:
+            headers['Content-Type'] = 'application/json'
 
         response = requests.post(url, headers=headers)
 
