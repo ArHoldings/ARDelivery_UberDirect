@@ -13,11 +13,15 @@ from .exceptions import JsonException
 
 def _token_required(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
-        cached = cache.get(settings.AR_DELIVERY_UBER_DIRECT_ACCESS_TOKEN, None)
+    def wrapper(self, *args, **kwargs):
+        client_id = self.client_id
+        client_secret = self.client_secret
+        cache_key = f"{settings.AR_DELIVERY_UBER_DIRECT_ACCESS_TOKEN}_{client_id}"
+        
+        cached = cache.get(cache_key, None)
 
-        if cached is None or UberDirect._cached_token_expires_soon(json.loads(cached)):
-            token_json = UberDirect._get_new_token()
+        if cached is None or self._cached_token_expires_soon(json.loads(cached)):
+            token_json = self._get_new_token(client_id, client_secret)
             new_token = token_json['access_token']
             expires_in = token_json.get('expires_in', 1800)
             expires_at = datetime.now() + timedelta(seconds=expires_in)
@@ -29,31 +33,42 @@ def _token_required(func):
 
             cache_timeout = expires_in - 60 if expires_in > 60 else expires_in
             cache.set(
-                settings.AR_DELIVERY_UBER_DIRECT_ACCESS_TOKEN,
-                json.dumps(token_data, default=UberDirect._convert_datetime),
+                cache_key,
+                json.dumps(token_data, default=self._convert_datetime),
                 timeout=cache_timeout
             )
-            cached = cache.get(settings.AR_DELIVERY_UBER_DIRECT_ACCESS_TOKEN)
+            cached = cache.get(cache_key)
 
         token = json.loads(cached)['access_token']
 
-        headers = kwargs.get("headers", {}) or {}
+        headers = kwargs.pop("headers", {})
         headers["Authorization"] = f"Bearer {token}"
         kwargs["headers"] = headers
 
-        return func(*args, **kwargs)
+        return func(self, *args, **kwargs)
 
     return wrapper
 
 
 class UberDirect:
     """
-    Cliente para integrar AR Delivery Uber Direct en proyectos Django.
-    Maneja autenticación, cache de tokens y solicitudes.
+    Puede ser instanciado de dos formas:
+    1. Con credenciales explícitas:
+       uber = UberDirect(client_id='...', client_secret='...')
+    
+    2. Sin credenciales (las obtiene de Django settings):
+       uber = UberDirect()
     """
 
-    @staticmethod
-    def _cached_token_expires_soon(cached_token):
+    def __init__(self, client_id=None, client_secret=None, customer_id=None, 
+                 api_base_url=None, login_base_url=None):
+        self.client_id = client_id or settings.AR_DELIVERY_UBER_DIRECT_API_CLIENT_ID
+        self.client_secret = client_secret or settings.AR_DELIVERY_UBER_DIRECT_API_CLIENT_SECRET
+        self.customer_id = customer_id or settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID
+        self.api_base_url = api_base_url or settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL
+        self.login_base_url = login_base_url or settings.AR_DELIVERY_UBER_DIRECT_LOGIN_BASE_URL
+
+    def _cached_token_expires_soon(self, cached_token):
         expires_at = datetime.strptime(cached_token['expires_at'], '%Y-%m-%dT%H:%M:%S.%f')
         return (expires_at - datetime.now()) < timedelta(minutes=1)
 
@@ -63,12 +78,11 @@ class UberDirect:
             return obj.isoformat()
         raise TypeError("Tipo de objeto no serializable")
 
-    @staticmethod
-    def _get_new_token():
-        url = f'{settings.AR_DELIVERY_UBER_DIRECT_LOGIN_BASE_URL}'
+    def _get_new_token(self, client_id, client_secret):
+        url = f'{self.login_base_url}'
         payload = {
-            'client_id': settings.AR_DELIVERY_UBER_DIRECT_API_CLIENT_ID,
-            'client_secret': settings.AR_DELIVERY_UBER_DIRECT_API_CLIENT_SECRET,
+            'client_id': client_id,
+            'client_secret': client_secret,
             'grant_type': 'client_credentials',
             'scope': 'eats.deliveries'
         }
@@ -92,10 +106,9 @@ class UberDirect:
             status_code=response.status_code
         )
 
-    @staticmethod
     @_token_required
-    def create_quote(data, headers=None):
-        url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/delivery_quotes'
+    def create_quote(self, data, headers=None):
+        url = f'{self.api_base_url}/customers/{self.customer_id}/delivery_quotes'
         headers = headers or {}
         if not 'Content-Type' in headers:
             headers['Content-Type'] = 'application/json; charset=utf-8'
@@ -120,10 +133,9 @@ class UberDirect:
             status_code=response.status_code
         )
 
-    @staticmethod
     @_token_required
-    def create_delivery(data, headers=None):
-        url = f'{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries'
+    def create_delivery(self, data, headers=None):
+        url = f'{self.api_base_url}/customers/{self.customer_id}/deliveries'
         headers = headers or {}
         if not 'Content-Type' in headers:
             headers['Content-Type'] = 'application/json; charset=utf-8'
@@ -148,10 +160,9 @@ class UberDirect:
             status_code=response.status_code
         )
 
-    @staticmethod
     @_token_required
-    def list_or_get_delivery(extra_data=None, headers=None):
-        base_url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries"
+    def list_or_get_delivery(self, extra_data=None, headers=None):
+        base_url = f"{self.api_base_url}/customers/{self.customer_id}/deliveries"
 
         delivery_id = getattr(extra_data, "delivery_id", None)
         query = None
@@ -187,10 +198,9 @@ class UberDirect:
             status_code=response.status_code,
         )
 
-    @staticmethod
     @_token_required
-    def update_delivery(delivery_id, data, headers=None):
-        url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries/{delivery_id}"
+    def update_delivery(self, delivery_id, data, headers=None):
+        url = f"{self.api_base_url}/customers/{self.customer_id}/deliveries/{delivery_id}"
 
         headers = headers or {}
         if not 'Content-Type' in headers:
@@ -215,10 +225,9 @@ class UberDirect:
             status_code=response.status_code,
         )
 
-    @staticmethod
     @_token_required
-    def cancel_delivery(delivery_id, headers=None):
-        url = f"{settings.AR_DELIVERY_UBER_DIRECT_API_BASE_URL}/customers/{settings.AR_DELIVERY_UBER_DIRECT_CUSTOMER_ID}/deliveries/{delivery_id}/cancel"
+    def cancel_delivery(self, delivery_id, headers=None):
+        url = f"{self.api_base_url}/customers/{self.customer_id}/deliveries/{delivery_id}/cancel"
 
         headers = headers or {}
         if not 'Content-Type' in headers:
