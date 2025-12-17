@@ -52,6 +52,9 @@ def _token_required(func):
 
 class UberDirect:
     """
+    Cliente para integrar AR Delivery Uber Direct en proyectos Django.
+    Maneja autenticación, cache de tokens y solicitudes.
+    
     Puede ser instanciado de dos formas:
     1. Con credenciales explícitas:
        uber = UberDirect(client_id='...', client_secret='...')
